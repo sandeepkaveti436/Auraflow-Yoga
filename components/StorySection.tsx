@@ -29,32 +29,32 @@ export default function StorySection() {
   const pinRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    let ctx = gsap.context(() => {
-      const slides = gsap.utils.toArray(".story-slide");
-      const dots = gsap.utils.toArray(".story-dot");
+    const ctx = gsap.context(() => {
+      // Correctly typing the arrays for TypeScript
+      const slides = gsap.utils.toArray<HTMLElement>(".story-slide");
+      const dots = gsap.utils.toArray<HTMLElement>(".story-dot");
 
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top top",
-          // Calculate end based on slide count
-          end: () => `+=${slides.length * 100}%`, 
+          end: () => `+=${slides.length * 100}%`,
           scrub: 1,
           pin: pinRef.current,
           pinSpacing: true,
           anticipatePin: 1,
-          invalidateOnRefresh: true, // Recalculates on mobile resize/rotate
-          // This forces the pinned element to stay exactly 100% wide
+          invalidateOnRefresh: true,
           onRefresh: (self) => {
-            if (self.pin) {
+            // FIXED: Type Guard ensures build passes
+            if (self.pin instanceof HTMLElement) {
               self.pin.style.width = "100%";
               self.pin.style.left = "0";
             }
-          }
+          },
         },
       });
 
-      slides.forEach((slide: any, i: number) => {
+      slides.forEach((slide, i) => {
         if (i > 0) {
           // Slide Reveal
           tl.fromTo(
@@ -65,41 +65,49 @@ export default function StorySection() {
           );
 
           // Image Parallax
-          tl.fromTo(
-            slide.querySelector("img"),
-            { y: 50, scale: 1.1 },
-            { y: 0, scale: 1, ease: "none", duration: 1 },
-            "<"
-          );
+          const img = slide.querySelector("img");
+          if (img) {
+            tl.fromTo(
+              img,
+              { y: 50, scale: 1.1 },
+              { y: 0, scale: 1, ease: "none", duration: 1 },
+              "<"
+            );
+          }
         }
 
         // Dot Highlighting
-        tl.to(dots[i], {
-          backgroundColor: "#d9a4ea",
-          scale: 1.4,
-          borderColor: "#d9a4ea",
-          duration: 0.3
-        }, i === 0 ? "0" : "-=0.5");
+        if (dots[i]) {
+          tl.to(dots[i], {
+            backgroundColor: "#d9a4ea",
+            scale: 1.4,
+            borderColor: "#d9a4ea",
+            duration: 0.3
+          }, i === 0 ? "0" : "-=0.5");
 
-        if (i < slides.length - 1) {
-          tl.to(dots[i], { backgroundColor: "transparent", scale: 1, duration: 0.3 });
+          if (i < slides.length - 1) {
+            tl.to(dots[i], { backgroundColor: "transparent", scale: 1, duration: 0.3 });
+          }
         }
 
         // Text Content Fade
-        tl.fromTo(
-          slide.querySelector(".story-content"),
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, duration: 0.5 },
-          "-=0.5"
-        );
+        const content = slide.querySelector(".story-content");
+        if (content) {
+          tl.fromTo(
+            content,
+            { opacity: 0, y: 30 },
+            { opacity: 1, y: 0, duration: 0.5 },
+            "-=0.5"
+          );
 
-        if (i < slides.length - 1) {
-          tl.to(slide.querySelector(".story-content"), {
-            opacity: 0,
-            y: -30,
-            duration: 0.5,
-            delay: 0.5,
-          });
+          if (i < slides.length - 1) {
+            tl.to(content, {
+              opacity: 0,
+              y: -30,
+              duration: 0.5,
+              delay: 0.5,
+            });
+          }
         }
       });
     }, sectionRef);
@@ -108,22 +116,16 @@ export default function StorySection() {
   }, []);
 
   return (
-    /* overflow-hidden on the section is mandatory to stop the horizontal shift */
     <section 
       ref={sectionRef} 
       className="relative w-full overflow-hidden bg-black"
-      style={{ touchAction: "none" }} // Prevents jitter on some mobile browsers
+      style={{ touchAction: "none" }}
     >
-      {/* 
-          1. Use w-full instead of w-screen to avoid scrollbar math errors 
-          2. h-[100dvh] handles mobile address bars perfectly 
-      */}
       <div 
         ref={pinRef} 
         className="relative h-[100dvh] w-full overflow-hidden"
       >
-        
-        {/* PROGRESS DOTS (Exactly as your image) */}
+        {/* PROGRESS DOTS */}
         <div className="absolute right-5 top-1/2 z-[60] flex -translate-y-1/2 flex-col gap-6 md:right-10">
           {storySlides.map((_, i) => (
             <div 
@@ -139,7 +141,6 @@ export default function StorySection() {
             className="story-slide absolute inset-0 flex h-full w-full items-center justify-center overflow-hidden"
             style={{ zIndex: index + 1 }}
           >
-            {/* FORCE IMAGE TO FILL 100% WITHOUT OVERFLOW */}
             <div className="absolute inset-0 h-full w-full">
               <Image
                 src={slide.image}
