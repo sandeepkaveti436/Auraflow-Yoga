@@ -30,7 +30,6 @@ export default function StorySection() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Correctly typing the arrays for TypeScript
       const slides = gsap.utils.toArray<HTMLElement>(".story-slide");
       const dots = gsap.utils.toArray<HTMLElement>(".story-dot");
 
@@ -43,9 +42,9 @@ export default function StorySection() {
           pin: pinRef.current,
           pinSpacing: true,
           anticipatePin: 1,
+          fastScrollEnd: true, // HELPS MOBILE PERFORMANCE
           invalidateOnRefresh: true,
           onRefresh: (self) => {
-            // FIXED: Type Guard ensures build passes
             if (self.pin instanceof HTMLElement) {
               self.pin.style.width = "100%";
               self.pin.style.left = "0";
@@ -56,48 +55,52 @@ export default function StorySection() {
 
       slides.forEach((slide, i) => {
         if (i > 0) {
-          // Slide Reveal
           tl.fromTo(
             slide,
             { clipPath: "inset(100% 0% 0% 0%)" },
             { clipPath: "inset(0% 0% 0% 0%)", ease: "none", duration: 1 },
-            "+=0.2"
+            "+=0.2",
           );
 
-          // Image Parallax
           const img = slide.querySelector("img");
           if (img) {
             tl.fromTo(
               img,
               { y: 50, scale: 1.1 },
               { y: 0, scale: 1, ease: "none", duration: 1 },
-              "<"
+              "<",
             );
           }
         }
 
-        // Dot Highlighting
         if (dots[i]) {
-          tl.to(dots[i], {
-            backgroundColor: "#d9a4ea",
-            scale: 1.4,
-            borderColor: "#d9a4ea",
-            duration: 0.3
-          }, i === 0 ? "0" : "-=0.5");
+          tl.to(
+            dots[i],
+            {
+              backgroundColor: "#d9a4ea",
+              scale: 1.4,
+              borderColor: "#d9a4ea",
+              duration: 0.3,
+            },
+            i === 0 ? "0" : "-=0.5",
+          );
 
           if (i < slides.length - 1) {
-            tl.to(dots[i], { backgroundColor: "transparent", scale: 1, duration: 0.3 });
+            tl.to(dots[i], {
+              backgroundColor: "transparent",
+              scale: 1,
+              duration: 0.3,
+            });
           }
         }
 
-        // Text Content Fade
         const content = slide.querySelector(".story-content");
         if (content) {
           tl.fromTo(
             content,
             { opacity: 0, y: 30 },
             { opacity: 1, y: 0, duration: 0.5 },
-            "-=0.5"
+            "-=0.5",
           );
 
           if (i < slides.length - 1) {
@@ -116,21 +119,17 @@ export default function StorySection() {
   }, []);
 
   return (
-    <section 
-      ref={sectionRef} 
+    <section
+      ref={sectionRef}
+      // REMOVED touchAction: "none" TO RESTORE MOBILE SWIPING
       className="relative w-full overflow-hidden bg-black"
-      style={{ touchAction: "none" }}
     >
-      <div 
-        ref={pinRef} 
-        className="relative h-[100dvh] w-full overflow-hidden"
-      >
-        {/* PROGRESS DOTS */}
+      <div ref={pinRef} className="relative h-[100dvh] w-full overflow-hidden">
         <div className="absolute right-5 top-1/2 z-[60] flex -translate-y-1/2 flex-col gap-6 md:right-10">
           {storySlides.map((_, i) => (
-            <div 
-              key={i} 
-              className="story-dot h-2.5 w-2.5 rounded-full border-2 border-white/30 transition-all duration-300" 
+            <div
+              key={i}
+              className="story-dot h-2.5 w-2.5 rounded-full border-2 border-white/30 transition-all duration-300"
             />
           ))}
         </div>
@@ -151,20 +150,20 @@ export default function StorySection() {
                 sizes="100vw"
               />
             </div>
-            
+
             <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/90" />
-            
+
             <div className="story-content relative z-20 flex w-full max-w-4xl flex-col items-center px-10 text-center">
               <p className="mb-3 text-[10px] uppercase tracking-[0.4em] text-[#d9a4ea] md:text-xs font-medium">
                 Chapter 0{index + 1}
               </p>
-              
+
               <h2 className="font-serif text-4xl font-light leading-tight text-white sm:text-5xl md:text-7xl lg:text-9xl">
                 {slide.title}
               </h2>
-              
+
               <div className="my-5 h-[1px] w-12 bg-[#d9a4ea]/40 md:w-20" />
-              
+
               <p className="max-w-[260px] text-[13px] font-light leading-relaxed text-gray-300 sm:max-w-xs md:max-w-md md:text-lg">
                 {slide.desc}
               </p>
