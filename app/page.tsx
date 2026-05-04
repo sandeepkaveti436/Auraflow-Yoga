@@ -12,6 +12,8 @@ import Pricing from "@/components/Pricing";
 import Gallery from "@/components/Gallery";
 import Footer from "@/components/Footer";
 import SplashScreen from "@/components/SplashScreen";
+import { Analytics } from '@vercel/analytics/next';
+
 
 export default function Home() {
   const [isSplashFinished, setIsSplashFinished] = useState(false);
@@ -40,6 +42,7 @@ export default function Home() {
             <Pricing />
             <Gallery />
             <Footer />
+           < Analytics />
           </>
         )}
       </main>
